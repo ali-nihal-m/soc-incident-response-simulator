@@ -94,7 +94,18 @@ It does **not**:
 - Replace professional SIEM or SOAR platforms  
 
 ---
+## 📸 Screenshots
 
+### Dashboard Overview
+![Dashboard Overview](screenshots/dashboard-overview.png)
+
+### Incident Details & Actions
+![Incident Details](screenshots/incident-details.png)
+
+### Playbook & Log Stream
+![Playbook Logs](screenshots/playbook-logs.png)
+
+---
 ## 📝 License
 
 MIT License  
@@ -103,3 +114,4 @@ MIT License
 ---
 
 **Built as part of cybersecurity education and SOC skill development**
+
