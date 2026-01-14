@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOC Dashboard</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #e2e8f0;
+  padding: 20px;
+}
+
+.container { max-width: 1600px; margin: 0 auto; }
+
+.header {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(71, 85, 105, 0.5);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 26px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  border-radius: 20px;
+  font-size: 13px;
+  color: #22c55e;
+}
+
+.status::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: #22c55e;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  border-radius: 14px;
+  padding: 22px;
+  transition: all 0.3s;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--color);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+}
+
+.stat-card.blue { --color: #3b82f6; }
+.stat-card.orange { --color: #f59e0b; }
+.stat-card.red { --color: #ef4444; }
+.stat-card.green { --color: #22c55e; }
+
+.stat-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 36px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.panel {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  border-radius: 14px;
+  padding: 22px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.panel-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.btn-refresh {
+  background: rgba(139, 92, 246, 0.2);
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  color: #a78bfa;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.search {
+  width: 100%;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #e2e8f0;
+  margin-bottom: 14px;
+}
+
+.search:focus {
+  outline: none;
+  border-color: #8b5cf6;
+}
+
+.incident {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(71, 85, 105, 0.3);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.incident:hover {
+  background: rgba(30, 41, 59, 0.7);
+  border-color: #8b5cf6;
+  transform: translateX(4px);
+}
+
+.inc-top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.inc-name {
+  font-weight: 600;
+  color: #fff;
+  font-size: 14px;
+}
+
+.badge {
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.badge-critical {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.5);
+}
+
+.badge-high {
+  background: rgba(249, 115, 22, 0.2);
+  color: #fdba74;
+  border: 1px solid rgba(249, 115, 22, 0.5);
+}
+
+.badge-medium {
+  background: rgba(234, 179, 8, 0.2);
+  color: #fde047;
+  border: 1px solid rgba(234, 179, 8, 0.5);
+}
+
+.inc-meta {
+  display: flex;
+  gap: 14px;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.details {
+  line-height: 1.9;
+  color: #cbd5e1;
+  font-size: 14px;
+}
+
+.details strong { color: #fff; }
+
+.btn-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.btn {
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #8b5cf6, #6366f1);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(139, 92, 246, 0.5);
+}
+
+.btn-warning {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.btn-secondary {
+  background: rgba(71, 85, 105, 0.3);
+  color: #cbd5e1;
+  border: 1px solid rgba(71, 85, 105, 0.5);
+}
+
+.logs {
+  height: 240px;
+  overflow-y: auto;
+  background: rgba(2, 6, 23, 0.8);
+  border-radius: 8px;
+  padding: 10px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+}
+
+.log {
+  margin-bottom: 5px;
+  padding: 5px;
+  border-radius: 4px;
+}
+
+.log-info { color: #64748b; }
+.log-success { color: #22c55e; background: rgba(34, 197, 94, 0.05); }
+.log-warning { color: #f59e0b; background: rgba(245, 158, 11, 0.05); }
+.log-error { color: #ef4444; background: rgba(239, 68, 68, 0.05); }
+
+.threat {
+  background: rgba(15, 23, 42, 0.4);
+  border-left: 3px solid var(--c);
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.threat.critical { --c: #ef4444; }
+.threat.high { --c: #f59e0b; }
+.threat.info { --c: #3b82f6; }
+
+.chart { height: 220px; position: relative; }
+
+.playbook {
+  list-style: none;
+  counter-reset: num;
+}
+
+.playbook li {
+  counter-increment: num;
+  padding: 10px 10px 10px 45px;
+  position: relative;
+  margin-bottom: 8px;
+  background: rgba(15, 23, 42, 0.4);
+  border-radius: 8px;
+  color: #cbd5e1;
+}
+
+.playbook li::before {
+  content: counter(num);
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, #8b5cf6, #6366f1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.full { grid-column: 1 / -1; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="logo">🛡️ VertexGuard SOC</div>
+    <div class="status">System Operational</div>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card blue">
+      <div class="stat-label">Total Alerts</div>
+      <div class="stat-value" id="alerts">0</div>
+    </div>
+    <div class="stat-card orange">
+      <div class="stat-label">Active Incidents</div>
+      <div class="stat-value" id="active">0</div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-label">Critical Alerts</div>
+      <div class="stat-value" id="critical">0</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">Risk Score</div>
+      <div class="stat-value" id="risk">0</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">🚨 Active Incidents</div>
+        <button class="btn-refresh" onclick="location.reload()">↻</button>
+      </div>
+      <input type="text" class="search" id="search" placeholder="🔍 Search...">
+      <div id="incList"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">📋 Details</div>
+      </div>
+      <div class="details" id="details">Select an incident</div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="doContain()">🛡️ Contain</button>
+        <button class="btn btn-warning" onclick="doEscalate()">🚨 Escalate</button>
+        <button class="btn btn-secondary" onclick="doIgnore()">✕ Ignore</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">📊 Threat Distribution</div>
+      </div>
+      <div class="chart"><canvas id="pie"></canvas></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">📈 Incident Trend</div>
+      </div>
+      <div class="chart"><canvas id="line"></canvas></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">💻 Live Logs</div>
+        <button class="btn-refresh" onclick="document.getElementById('logBox').innerHTML=''">Clear</button>
+      </div>
+      <div class="logs" id="logBox"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">🌐 Threat Intel</div>
+      </div>
+      <div id="threats"></div>
+    </div>
+
+    <div class="panel full">
+      <div class="panel-header">
+        <div class="panel-title">📖 Response Playbook</div>
+        <button class="btn btn-primary" style="width:auto;" onclick="exportReport()">📄 Export</button>
+      </div>
+      <ol class="playbook" id="playbook">
+        <li>Select incident to view steps</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let data = [];
+let sel = null;
+let riskVal = 0;
+let pieC, lineC;
+
+const db = {
+  ransomware: { sev: 'critical', steps: ['Isolate systems', 'Block C2 domains', 'Preserve evidence', 'Restore backups', 'Deploy decryption', 'Notify stakeholders'] },
+  exfiltration: { sev: 'high', steps: ['Block outbound traffic', 'Capture packets', 'Identify data scope', 'Review logs', 'Notify legal', 'Implement DLP'] },
+  bruteforce: { sev: 'medium', steps: ['Enable lockout', 'Review auth logs', 'Block IP', 'Reset passwords', 'Enable MFA', 'Add rate limits'] },
+  malware: { sev: 'high', steps: ['Quarantine system', 'Run AV scan', 'Analyze behavior', 'Check processes', 'Update signatures', 'Restore clean backup'] },
+  phishing: { sev: 'medium', steps: ['Block sender', 'Quarantine emails', 'Notify users', 'Security training', 'Update filters', 'Check credentials'] }
+};
+
+function start() {
+  const tmp = [
+    { type: 'ransomware', name: 'Ransomware Detected', desc: 'Encryption on FILE-SRV-01', ip: '192.168.1.45', asset: 'FILE-SRV-01' },
+    { type: 'exfiltration', name: 'Data Exfiltration', desc: 'Large transfer detected', ip: '45.67.89.123', asset: 'DB-SERVER-03' },
+    { type: 'bruteforce', name: 'SSH Brute Force', desc: 'Multiple failed logins', ip: '203.45.67.89', asset: 'WEB-SRV-02' },
+    { type: 'malware', name: 'Malware Execution', desc: 'Suspicious process', ip: '192.168.1.78', asset: 'WORKSTATION-12' },
+    { type: 'phishing', name: 'Phishing Campaign', desc: 'Credential harvesting', ip: '103.21.44.67', asset: 'MAIL-GW' },
+    { type: 'exfiltration', name: 'Cloud Upload', desc: 'Unauthorized upload', ip: '192.168.1.92', asset: 'LAPTOP-HR-05' },
+    { type: 'bruteforce', name: 'RDP Brute Force', desc: '500+ failed attempts', ip: '89.123.45.67', asset: 'REMOTE-01' }
+  ];
+
+  data = tmp.map((t, i) => ({
+    id: i + 1,
+    ...t,
+    sev: db[t.type].sev,
+    time: new Date(Date.now() - Math.random() * 3600000).toLocaleString(),
+    status: 'active',
+    events: Math.floor(Math.random() * 50) + 10
+  }));
+
+  calcRisk();
+  showList();
+  updateStats();
+  makeCharts();
+  updateCharts();
+  addThreats();
+  log('SOC Dashboard initialized', 'success');
+  setInterval(makeLogs, 3000);
+}
+
+function calcRisk() {
+  riskVal = data.reduce((a, d) => {
+    if (d.status !== 'active') return a;
+    return a + (d.sev === 'critical' ? 150 : d.sev === 'high' ? 100 : 50);
+  }, 0);
+}
+
+function showList(f = '') {
+  const box = document.getElementById('incList');
+  const act = data.filter(d => 
+    d.status === 'active' && 
+    (d.name.toLowerCase().includes(f.toLowerCase()) || d.desc.toLowerCase().includes(f.toLowerCase()))
+  );
+
+  if (act.length === 0) {
+    box.innerHTML = '<div style="text-align:center;color:#64748b;padding:20px;">No incidents</div>';
+    return;
+  }
+
+  box.innerHTML = act.map(d => `
+    <div class="incident" onclick="pick(${d.id})">
+      <div class="inc-top">
+        <div class="inc-name">${d.name}</div>
+        <div class="badge badge-${d.sev}">${d.sev}</div>
+      </div>
+      <div class="inc-meta">
+        <span>🕒 ${d.time}</span>
+        <span>💻 ${d.asset}</span>
+        <span>📍 ${d.ip}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function pick(id) {
+  sel = data.find(d => d.id === id);
+  if (!sel) return;
+
+  document.getElementById('details').innerHTML = `
+    <strong>ID:</strong> INC-${sel.id.toString().padStart(4, '0')}<br>
+    <strong>Title:</strong> ${sel.name}<br>
+    <strong>Severity:</strong> <span class="badge badge-${sel.sev}">${sel.sev.toUpperCase()}</span><br>
+    <strong>Asset:</strong> ${sel.asset}<br>
+    <strong>Source IP:</strong> ${sel.ip}<br>
+    <strong>Time:</strong> ${sel.time}<br>
+    <strong>Events:</strong> ${sel.events}<br>
+    <strong>Status:</strong> ${sel.status}<br>
+    <strong>Description:</strong> ${sel.desc}
+  `;
+
+  document.getElementById('playbook').innerHTML = db[sel.type].steps.map(s => `<li>${s}</li>`).join('');
+}
+
+function doContain() {
+  if (!sel || sel.status !== 'active') return alert('Select active incident');
+  sel.status = 'contained';
+  log(`✅ INC-${sel.id.toString().padStart(4, '0')} contained`, 'success');
+  calcRisk();
+  showList();
+  updateStats();
+  updateCharts();
+}
+
+function doEscalate() {
+  if (!sel || sel.status !== 'active') return alert('Select active incident');
+  sel.status = 'escalated';
+  riskVal += 50;
+  log(`🚨 INC-${sel.id.toString().padStart(4, '0')} escalated`, 'warning');
+  showList();
+  updateStats();
+}
+
+function doIgnore() {
+  if (!sel || sel.status !== 'active') return alert('Select active incident');
+  sel.status = 'ignored';
+  log(`⏭️ INC-${sel.id.toString().padStart(4, '0')} ignored`, 'info');
+  showList();
+  updateStats();
+  updateCharts();
+}
+
+function log(m, t = 'info') {
+  const box = document.getElementById('logBox');
+  const time = new Date().toLocaleTimeString();
+  const div = document.createElement('div');
+  div.className = `log log-${t}`;
+  div.textContent = `[${time}] ${m}`;
+  box.insertBefore(div, box.firstChild);
+  while (box.children.length > 40) box.removeChild(box.lastChild);
+}
+
+function makeLogs() {
+  const logs = [
+    { m: 'Firewall blocked 45.67.89.123', t: 'info' },
+    { m: 'WARNING: Unusual traffic port 443', t: 'warning' },
+    { m: 'AV scan completed', t: 'success' },
+    { m: 'User admin logged in', t: 'info' },
+    { m: 'CRITICAL: Encryption detected', t: 'error' },
+    { m: 'Failed SSH from 203.45.67.89', t: 'warning' },
+    { m: 'IDS alert: Suspicious POST', t: 'warning' },
+    { m: 'EDR updated successfully', t: 'success' }
+  ];
+  const l = logs[Math.floor(Math.random() * logs.length)];
+  log(l.m, l.t);
+}
+
+function updateStats() {
+  const logs = document.getElementById('logBox').children.length;
+  const act = data.filter(d => d.status === 'active').length;
+  const crit = data.filter(d => d.sev === 'critical' && d.status === 'active').length;
+  document.getElementById('alerts').textContent = logs;
+  document.getElementById('active').textContent = act;
+  document.getElementById('critical').textContent = crit;
+  document.getElementById('risk').textContent = riskVal;
+}
+
+function addThreats() {
+  const t = [
+    { m: 'New ransomware "DarkCrypt" in wild', l: 'critical' },
+    { m: 'CVE-2021-44228 Log4j vulnerability', l: 'critical' },
+    { m: 'Phishing targeting finance sector', l: 'high' },
+    { m: 'Botnet C2: 45.67.89.123', l: 'high' },
+    { m: 'Supply chain attacks up 80%', l: 'info' },
+    { m: 'New Emotet signature available', l: 'info' }
+  ];
+  document.getElementById('threats').innerHTML = t.map(i => `<div class="threat ${i.l}">${i.m}</div>`).join('');
+}
+
+function makeCharts() {
+  pieC = new Chart(document.getElementById('pie'), {
+    type: 'doughnut',
+    data: {
+      labels: [],
+      datasets: [{
+        data: [],
+        backgroundColor: ['#ef4444', '#f59e0b', '#eab308', '#3b82f6', '#8b5cf6'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      cutout: '65%',
+      plugins: { legend: { labels: { color: '#e2e8f0' } } }
+    }
+  });
+
+  lineC = new Chart(document.getElementById('line'), {
+    type: 'line',
+    data: {
+      labels: ['1h', '2h', '3h', '4h', '5h'],
+      datasets: [{
+        label: 'Incidents',
+        data: [3, 5, 2, 6, 4],
+        borderColor: '#8b5cf6',
+        backgroundColor: 'rgba(139,92,246,0.2)',
+        tension: 0.4,
+        fill: true
+      }]
+    },
+    options: {
+      plugins: { legend: { labels: { color: '#e2e8f0' } } },
+      scales: {
+        x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(71,85,105,0.2)' } },
+        y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(71,85,105,0.2)' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+function updateCharts() {
+  const cnt = {};
+  data.filter(d => d.status === 'active').forEach(d => {
+    cnt[d.type] = (cnt[d.type] || 0) + 1;
+  });
+  pieC.data.labels = Object.keys(cnt).map(k => k.charAt(0).toUpperCase() + k.slice(1));
+  pieC.data.datasets[0].data = Object.values(cnt);
+  pieC.update();
+}
+
+function exportReport() {
+  if (!sel) return alert('Select incident first');
+  const txt = `
+SOC INCIDENT REPORT
+==================
+ID: INC-${sel.id.toString().padStart(4, '0')}
+Title: ${sel.name}
+Severity: ${sel.sev.toUpperCase()}
+Status: ${sel.status}
+Time: ${sel.time}
+Asset: ${sel.asset}
+Source IP: ${sel.ip}
+Events: ${sel.events}
+Description: ${sel.desc}
+
+RESPONSE STEPS:
+${db[sel.type].steps.map((s, i) => `${i + 1}. ${s}`).join('\n')}
+
+Risk Score: ${riskVal}
+Generated: ${new Date().toLocaleString()}
+  `;
+  const blob = new Blob([txt], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `INC-${sel.id.toString().padStart(4, '0')}.txt`;
+  a.click();
+  log('📄 Report exported', 'success');
+}
+
+document.getElementById('search').addEventListener('input', e => showList(e.target.value));
+window.onload = start;
+</script>
+
+</body>
+</html>
